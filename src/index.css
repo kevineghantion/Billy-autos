@@ -1,0 +1,203 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Salam Motors - Premium Luxury Design System */
+
+@layer base {
+  :root {
+    /* Core Palette - Absolute Black Foundation */
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+
+    /* Card - Glassmorphism Black */
+    --card: 0 0% 6%;
+    --card-foreground: 0 0% 100%;
+
+    /* Popover - Dark Glass */
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 100%;
+
+    /* Primary - Rich Gold */
+    --primary: 43 74% 53%;
+    --primary-foreground: 0 0% 0%;
+
+    /* Secondary - Muted Chrome */
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 85%;
+
+    /* Muted - Subtle Grays */
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 60%;
+
+    /* Accent - Electric Blue */
+    --accent: 217 91% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Destructive */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Borders & Inputs */
+    --border: 0 0% 20%;
+    --input: 0 0% 15%;
+    --ring: 43 74% 53%;
+
+    --radius: 0.5rem;
+
+    /* Custom Luxury Tokens */
+    --gold: 43 74% 53%;
+    --gold-light: 43 80% 65%;
+    --gold-dark: 43 70% 40%;
+    --glass: 0 0% 100% / 0.05;
+    --glass-border: 0 0% 100% / 0.1;
+    --glass-hover: 0 0% 100% / 0.1;
+
+    /* Sidebar (keeping for compatibility) */
+    --sidebar-background: 0 0% 4%;
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-primary: 43 74% 53%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent: 0 0% 10%;
+    --sidebar-accent-foreground: 0 0% 90%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 43 74% 53%;
+  }
+
+  .dark {
+    /* Same as root - always dark mode */
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 6%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 43 74% 53%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 85%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 217 91% 60%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 20%;
+    --input: 0 0% 15%;
+    --ring: 43 74% 53%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Montserrat', sans-serif;
+    @apply font-bold tracking-tight;
+  }
+}
+
+@layer components {
+  /* Glassmorphism Card */
+  .glass-card {
+    @apply bg-card/50 backdrop-blur-xl border border-white/10 rounded-lg;
+  }
+
+  /* Glass Navigation */
+  .glass-nav {
+    @apply bg-black/80 backdrop-blur-md border-b border-white/10;
+  }
+
+  /* Gold Gradient Text */
+  .gold-text {
+    @apply bg-gradient-to-r from-primary via-gold-light to-primary bg-clip-text text-transparent;
+  }
+
+  /* Ken Burns Effect */
+  .ken-burns {
+    transition: transform 8s linear;
+  }
+
+  .ken-burns:hover {
+    transform: scale(1.1);
+  }
+
+  /* Luxury Button Variants */
+  .btn-gold {
+    @apply bg-gradient-to-r from-primary to-gold-light text-black font-semibold 
+           hover:from-gold-light hover:to-primary transition-all duration-300
+           shadow-lg shadow-primary/20 hover:shadow-primary/40;
+  }
+
+  .btn-glass {
+    @apply bg-white/5 backdrop-blur-sm border border-white/20 text-white
+           hover:bg-white/10 hover:border-white/30 transition-all duration-300;
+  }
+
+  /* Pulse Animation for WhatsApp */
+  .pulse-ring {
+    @apply absolute inset-0 rounded-full bg-green-500/30 animate-ping;
+  }
+
+  /* Dark Overlay on Images */
+  .dark-overlay {
+    @apply absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent 
+           opacity-60 transition-opacity duration-500;
+  }
+
+  .dark-overlay-hover:hover .dark-overlay {
+    @apply opacity-30;
+  }
+
+  /* Spec Badge */
+  .spec-badge {
+    @apply absolute top-4 left-4 bg-destructive text-white text-xs font-bold 
+           px-3 py-1.5 rounded tracking-wider uppercase;
+  }
+
+  /* SOLD Ribbon */
+  .sold-ribbon {
+    position: absolute;
+    width: 200px;
+    height: 50px;
+    background: linear-gradient(135deg, hsl(var(--destructive)), hsl(var(--destructive) / 0.9));
+    transform: rotate(-45deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  }
+}
+
+@layer utilities {
+  /* Custom scrollbar */
+  .scrollbar-luxury::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollbar-luxury::-webkit-scrollbar-track {
+    @apply bg-muted;
+  }
+
+  .scrollbar-luxury::-webkit-scrollbar-thumb {
+    @apply bg-primary/50 rounded-full hover:bg-primary;
+  }
+
+  /* Text shadow for hero */
+  .text-shadow-luxury {
+    text-shadow: 0 4px 30px rgba(0, 0, 0, 0.8);
+  }
+}
