@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
-
-const ANALYTICS_STORAGE_KEY = 'billy_autos_analytics';
+import { db } from '@/lib/firebase';
+import { doc, onSnapshot, updateDoc, increment, setDoc, getDoc } from 'firebase/firestore';
 
 interface CarAnalytics {
     views: number;
@@ -10,7 +10,7 @@ interface CarAnalytics {
 
 interface AnalyticsData {
     cars: Record<string, CarAnalytics>;
-    totalViews: number;
+    totalViews: number; // Car views
     totalInquiries: number;
     siteVisits: number;
 }
@@ -35,72 +35,92 @@ const defaultAnalytics: AnalyticsData = {
 
 const AnalyticsContext = createContext<AnalyticsContextType | undefined>(undefined);
 
-const getStoredAnalytics = (): AnalyticsData => {
-    try {
-        const stored = localStorage.getItem(ANALYTICS_STORAGE_KEY);
-        // Migration: Add siteVisits if missing
-        const parsed = stored ? JSON.parse(stored) : defaultAnalytics;
-        return { ...defaultAnalytics, ...parsed };
-    } catch {
-        return defaultAnalytics;
-    }
-};
-
 export function AnalyticsProvider({ children }: { children: ReactNode }) {
-    const [analytics, setAnalytics] = useState<AnalyticsData>(getStoredAnalytics);
+    const [analytics, setAnalytics] = useState<AnalyticsData>(defaultAnalytics);
 
-    // Persist to localStorage whenever analytics change
+    // Sync with Firestore
     useEffect(() => {
-        localStorage.setItem(ANALYTICS_STORAGE_KEY, JSON.stringify(analytics));
-    }, [analytics]);
+        // Subscribe to global stats
+        const unsubGlobal = onSnapshot(doc(db, 'analytics', 'global'), (docSnap) => {
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                setAnalytics(prev => ({
+                    ...prev,
+                    totalViews: data.totalViews || 0,
+                    totalInquiries: data.totalInquiries || 0,
+                    siteVisits: data.siteVisits || 0,
+                }));
+            } else {
+                // Create if doesn't exist
+                setDoc(doc(db, 'analytics', 'global'), {
+                    totalViews: 0,
+                    totalInquiries: 0,
+                    siteVisits: 0
+                });
+            }
+        });
 
-    const trackSiteVisit = useCallback(() => {
-        // Simple session check could be added here, but for now we track every "app load"
-        // To be more accurate, we could check if we already tracked this session.
-        // But the user just asked for "visits".
-        const sessionKey = 'billy_autos_visited_session';
-        if (!sessionStorage.getItem(sessionKey)) {
-            sessionStorage.setItem(sessionKey, 'true');
-            setAnalytics((prev) => ({
-                ...prev,
-                siteVisits: (prev.siteVisits || 0) + 1,
-            }));
+        // Subscribe to car stats (fetching all for now as fleet is manageable)
+        // In a large app, we'd only fetch needed ones or top lists.
+        const unsubCars = onSnapshot(doc(db, 'analytics', 'cars'), (docSnap) => {
+            if (docSnap.exists()) {
+                setAnalytics(prev => ({
+                    ...prev,
+                    cars: docSnap.data() as Record<string, CarAnalytics>
+                }));
+            } else {
+                setDoc(doc(db, 'analytics', 'cars'), {});
+            }
+        });
+
+        return () => {
+            unsubGlobal();
+            unsubCars();
+        };
+    }, []);
+
+    const trackSiteVisit = useCallback(async () => {
+        try {
+            await updateDoc(doc(db, 'analytics', 'global'), {
+                siteVisits: increment(1)
+            });
+        } catch (error) {
+            console.error("Error tracking visit:", error);
         }
     }, []);
 
-    const trackView = useCallback((carId: string) => {
-        setAnalytics((prev) => {
-            const carData = prev.cars[carId] || { views: 0, inquiries: 0 };
-            return {
-                ...prev,
-                totalViews: prev.totalViews + 1,
-                cars: {
-                    ...prev.cars,
-                    [carId]: {
-                        ...carData,
-                        views: carData.views + 1,
-                        lastViewed: new Date().toISOString(),
-                    },
-                },
-            };
-        });
+    const trackView = useCallback(async (carId: string) => {
+        try {
+            // Update global
+            await updateDoc(doc(db, 'analytics', 'global'), {
+                totalViews: increment(1)
+            });
+            // Update car stats (using nested object notation for 'cars' document)
+            // Note: For massive scale, use a subcollection. For this scale, a single map document is cheaper/easier.
+            await setDoc(doc(db, 'analytics', 'cars'), {
+                [carId]: {
+                    views: increment(1),
+                    lastViewed: new Date().toISOString()
+                }
+            }, { merge: true });
+        } catch (error) {
+            console.error("Error tracking view:", error);
+        }
     }, []);
 
-    const trackInquiry = useCallback((carId: string) => {
-        setAnalytics((prev) => {
-            const carData = prev.cars[carId] || { views: 0, inquiries: 0 };
-            return {
-                ...prev,
-                totalInquiries: prev.totalInquiries + 1,
-                cars: {
-                    ...prev.cars,
-                    [carId]: {
-                        ...carData,
-                        inquiries: carData.inquiries + 1,
-                    },
-                },
-            };
-        });
+    const trackInquiry = useCallback(async (carId: string) => {
+        try {
+            await updateDoc(doc(db, 'analytics', 'global'), {
+                totalInquiries: increment(1)
+            });
+            await setDoc(doc(db, 'analytics', 'cars'), {
+                [carId]: {
+                    inquiries: increment(1)
+                }
+            }, { merge: true });
+        } catch (error) {
+            console.error("Error tracking inquiry:", error);
+        }
     }, []);
 
     const getCarAnalytics = useCallback(
@@ -113,7 +133,7 @@ export function AnalyticsProvider({ children }: { children: ReactNode }) {
     const getTopViewed = useCallback(
         (limit: number = 5): Array<{ carId: string; views: number }> => {
             return Object.entries(analytics.cars)
-                .map(([carId, data]) => ({ carId, views: data.views }))
+                .map(([carId, data]) => ({ carId, views: data.views || 0 }))
                 .sort((a, b) => b.views - a.views)
                 .slice(0, limit);
         },
@@ -123,7 +143,7 @@ export function AnalyticsProvider({ children }: { children: ReactNode }) {
     const getTopInquired = useCallback(
         (limit: number = 5): Array<{ carId: string; inquiries: number }> => {
             return Object.entries(analytics.cars)
-                .map(([carId, data]) => ({ carId, inquiries: data.inquiries }))
+                .map(([carId, data]) => ({ carId, inquiries: data.inquiries || 0 }))
                 .filter((item) => item.inquiries > 0)
                 .sort((a, b) => b.inquiries - a.inquiries)
                 .slice(0, limit);
@@ -132,7 +152,8 @@ export function AnalyticsProvider({ children }: { children: ReactNode }) {
     );
 
     const resetAnalytics = useCallback(() => {
-        setAnalytics(defaultAnalytics);
+        // Admin only function - could implement clear logic here if needed
+        console.log("Reset not implemented for live DB");
     }, []);
 
     return (
