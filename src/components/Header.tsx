@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Phone } from 'lucide-react';
+import { Menu, X, Phone, Heart, Facebook, Instagram } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useFavorites } from '@/contexts/FavoritesContext';
 
 const navLinks = [
   { name: 'Home', href: '/' },
@@ -11,10 +12,33 @@ const navLinks = [
   { name: 'Contact', href: '/contact' },
 ];
 
+// Custom TikTok icon since lucide-react doesn't have one
+const TikTok = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
+  </svg>
+);
+
+const socialLinks = [
+  { icon: Facebook, href: 'https://www.facebook.com/billyautoslb/', label: 'Facebook' },
+  { icon: Instagram, href: 'https://www.instagram.com/billyautoslb/', label: 'Instagram' },
+  { icon: TikTok, href: 'https://www.tiktok.com/@billyautoslb3', label: 'TikTok' },
+];
+
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { favoritesCount } = useFavorites();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -68,9 +92,33 @@ export function Header() {
                 )}
               </Link>
             ))}
+            {/* Favorites Link - Only show when there are favorites */}
+            {favoritesCount > 0 && (
+              <Link
+                to="/favorites"
+                className={`relative font-display text-sm tracking-wider transition-all duration-300 flex items-center gap-2 group ${location.pathname === '/favorites'
+                  ? 'text-primary'
+                  : 'text-foreground/80 hover:text-foreground'
+                  }`}
+              >
+                <span className="relative">
+                  <Heart className="w-4 h-4 fill-primary text-primary transition-transform group-hover:scale-110" />
+                </span>
+                FAVORITES
+                <span className="bg-gradient-to-r from-primary to-gold-light text-black text-[10px] font-black px-2 py-0.5 rounded-md shadow-lg shadow-primary/20">
+                  {favoritesCount}
+                </span>
+                {location.pathname === '/favorites' && (
+                  <motion.div
+                    layoutId="activeNav"
+                    className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary"
+                  />
+                )}
+              </Link>
+            )}
           </nav>
 
-          {/* CTA & Phone */}
+          {/* Phone & Social Links */}
           <div className="hidden lg:flex items-center gap-4">
             <a
               href="tel:+96181999598"
@@ -79,20 +127,43 @@ export function Header() {
               <Phone className="w-4 h-4 text-primary" />
               <span>+961 81 999 598</span>
             </a>
-            <Button className="btn-gold font-display tracking-wider">
-              <a href="https://wa.me/96181999598" target="_blank" rel="noopener noreferrer">
-                GET VIP ACCESS
-              </a>
-            </Button>
+            <div className="flex items-center gap-3">
+              {socialLinks.map((social) => (
+                <a
+                  key={social.label}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 rounded-full bg-white/5 hover:bg-primary/20 text-muted-foreground hover:text-primary transition-all duration-300"
+                  aria-label={social.label}
+                >
+                  <social.icon className="w-4 h-4" />
+                </a>
+              ))}
+            </div>
           </div>
 
           {/* Mobile Menu Toggle */}
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="lg:hidden p-2 text-foreground"
-          >
-            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+          <div className="lg:hidden flex items-center gap-2">
+            {/* Mobile Favorites Icon - Only show when there are favorites */}
+            {favoritesCount > 0 && (
+              <Link
+                to="/favorites"
+                className="relative p-2 text-foreground group"
+              >
+                <Heart className="w-6 h-6 fill-primary text-primary transition-transform group-hover:scale-110" />
+                <span className="absolute -top-0.5 -right-0.5 bg-gradient-to-r from-primary to-gold-light text-black text-[10px] font-black min-w-[18px] h-[18px] flex items-center justify-center rounded-md shadow-lg shadow-primary/30">
+                  {favoritesCount}
+                </span>
+              </Link>
+            )}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 text-foreground"
+            >
+              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Menu */}
@@ -118,11 +189,37 @@ export function Header() {
                     {link.name.toUpperCase()}
                   </Link>
                 ))}
-                <Button className="btn-gold font-display tracking-wider w-full mt-4">
-                  <a href="https://wa.me/96181999598" target="_blank" rel="noopener noreferrer">
-                    GET VIP ACCESS
-                  </a>
-                </Button>
+                {/* Favorites in mobile menu - Only show when there are favorites */}
+                {favoritesCount > 0 && (
+                  <Link
+                    to="/favorites"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`font-display text-lg tracking-wider flex items-center gap-3 group ${location.pathname === '/favorites'
+                      ? 'text-primary'
+                      : 'text-foreground/80'
+                      }`}
+                  >
+                    <Heart className="w-5 h-5 fill-primary text-primary transition-transform group-hover:scale-110" />
+                    FAVORITES
+                    <span className="bg-gradient-to-r from-primary to-gold-light text-black text-[10px] font-black px-2 py-0.5 rounded-md shadow-lg shadow-primary/20">
+                      {favoritesCount}
+                    </span>
+                  </Link>
+                )}
+                <div className="flex items-center justify-center gap-4 mt-4">
+                  {socialLinks.map((social) => (
+                    <a
+                      key={social.label}
+                      href={social.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-3 rounded-full bg-white/5 hover:bg-primary/20 text-muted-foreground hover:text-primary transition-all duration-300"
+                      aria-label={social.label}
+                    >
+                      <social.icon className="w-5 h-5" />
+                    </a>
+                  ))}
+                </div>
               </nav>
             </motion.div>
           )}
@@ -131,3 +228,4 @@ export function Header() {
     </header>
   );
 }
+

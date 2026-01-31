@@ -1,7 +1,9 @@
 import { motion } from 'framer-motion';
-import { Eye } from 'lucide-react';
+import { Eye, Heart } from 'lucide-react';
 import { Car, formatPrice, generateWhatsAppLink } from '@/data/fleet';
 import { Button } from '@/components/ui/button';
+import { useFavorites } from '@/contexts/FavoritesContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface CarCardProps {
   car: Car;
@@ -10,8 +12,25 @@ interface CarCardProps {
 }
 
 export function CarCard({ car, index, onQuickView }: CarCardProps) {
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const { toast } = useToast();
   const isSold = car.status === 'sold';
   const isPOA = car.price === 0;
+  const isCarFavorite = isFavorite(car.id);
+
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const wasAlreadyFavorite = isCarFavorite;
+    toggleFavorite(car.id);
+
+    if (!wasAlreadyFavorite) {
+      toast({
+        title: "❤️ Saved to Favorites!",
+        description: `${car.make} ${car.model} added to your wishlist.`,
+        duration: 2000,
+      });
+    }
+  };
 
   return (
     <motion.div
@@ -30,6 +49,21 @@ export function CarCard({ car, index, onQuickView }: CarCardProps) {
 
         {/* Dark Overlay */}
         <div className="dark-overlay" />
+
+        {/* Favorite Button */}
+        <button
+          onClick={handleFavoriteClick}
+          className={`absolute top-4 right-4 z-20 p-2 rounded-full transition-all duration-300 ${isCarFavorite
+            ? 'bg-red-500 text-white'
+            : 'bg-black/40 text-white hover:bg-red-500'
+            }`}
+          aria-label={isCarFavorite ? 'Remove from favorites' : 'Add to favorites'}
+        >
+          <Heart
+            className={`w-5 h-5 transition-transform ${isCarFavorite ? 'fill-current scale-110' : ''
+              }`}
+          />
+        </button>
 
         {/* Spec Badge */}
         <div className="spec-badge">
@@ -109,3 +143,4 @@ export function CarCard({ car, index, onQuickView }: CarCardProps) {
     </motion.div>
   );
 }
+
