@@ -29,6 +29,8 @@ function SiteTracker() {
   return null;
 }
 
+import { PageTracker } from "@/components/PageTracker";
+
 const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
@@ -40,6 +42,7 @@ const App = () => (
               <Toaster />
               <Sonner />
               <BrowserRouter>
+                <PageTracker />
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/fleet" element={<Fleet />} />
