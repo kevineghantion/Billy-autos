@@ -50,7 +50,9 @@ export function Header() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled ? 'glass-nav py-3' : 'bg-transparent py-5'
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled || isMobileMenuOpen
+        ? 'bg-background/95 backdrop-blur-xl border-b border-white/10 py-3'
+        : 'bg-transparent py-5'
         }`}
     >
       <div className="container mx-auto px-4">
@@ -173,7 +175,7 @@ export function Header() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden mt-4 pb-4"
+              className="lg:hidden mt-4 pb-6 pt-2"
             >
               <nav className="flex flex-col gap-4">
                 {navLinks.map((link) => (

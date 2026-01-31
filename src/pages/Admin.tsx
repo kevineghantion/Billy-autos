@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, Save, ArrowLeft, Upload, X, LogOut } from 'lucide-react';
+import { Plus, Trash2, Save, ArrowLeft, Upload, X, LogOut, Eye, MessageCircle, Heart, BarChart3, TrendingUp, Users } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,8 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { SEOHead } from '@/components/SEOHead';
+import { useAnalytics } from '@/contexts/AnalyticsContext';
+import { useFavorites } from '@/contexts/FavoritesContext';
 
 interface CarFormData {
   id: string;
@@ -127,6 +129,7 @@ const createEmptyCar = (): CarFormData => ({
 const AdminPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { analytics, getTopViewed, getTopInquired, getCarAnalytics } = useAnalytics();
   const [fleet, setFleet] = useState<CarFormData[]>(getStoredFleet);
   const [editingCar, setEditingCar] = useState<CarFormData | null>(null);
   const [galleryInput, setGalleryInput] = useState('');
@@ -258,6 +261,63 @@ const AdminPage = () => {
             </div>
           </motion.div>
 
+          {/* Analytics Dashboard */}
+          {!editingCar && (
+            <div className="mb-8 grid gap-6">
+              {/* Stats Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Total Fleet */}
+                <div className="glass-card p-6 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <BarChart3 className="w-16 h-16 text-primary" />
+                  </div>
+                  <div className="flex items-center gap-4 mb-2">
+                    <div className="p-3 rounded-xl bg-primary/10 text-primary">
+                      <BarChart3 className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground font-display tracking-wider">TOTAL FLEET</p>
+                      <h3 className="text-3xl font-display font-bold text-foreground">{fleet.length}</h3>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Site Visits */}
+                <div className="glass-card p-6 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <Users className="w-16 h-16 text-blue-500" />
+                  </div>
+                  <div className="flex items-center gap-4 mb-2">
+                    <div className="p-3 rounded-xl bg-blue-500/10 text-blue-500">
+                      <Users className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground font-display tracking-wider">SITE VISITS</p>
+                      <h3 className="text-3xl font-display font-bold text-foreground">{analytics.siteVisits}</h3>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Total Inquiries */}
+                <div className="glass-card p-6 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <MessageCircle className="w-16 h-16 text-green-500" />
+                  </div>
+                  <div className="flex items-center gap-4 mb-2">
+                    <div className="p-3 rounded-xl bg-green-500/10 text-green-500">
+                      <MessageCircle className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground font-display tracking-wider">WHATSAPP CLICKS</p>
+                      <h3 className="text-3xl font-display font-bold text-foreground">{analytics.totalInquiries}</h3>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          )}
+
           {!editingCar ? (
             <>
               {/* Fleet List */}
@@ -318,6 +378,14 @@ const AdminPage = () => {
                               ? 'P.O.A.'
                               : `$${car.price.toLocaleString()}`}
                           </p>
+                          <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <Eye className="w-3 h-3" /> {getCarAnalytics(car.id).views} views
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <MessageCircle className="w-3 h-3" /> {getCarAnalytics(car.id).inquiries} inquiries
+                            </span>
+                          </div>
                         </div>
                         {car.status === 'sold' && (
                           <span className="px-2 py-1 bg-destructive/20 text-destructive text-xs font-bold rounded">

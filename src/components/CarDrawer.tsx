@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Phone, Calendar, Gauge, Fuel, Settings, Users } from 'lucide-react';
 import { Car, formatPrice, generateWhatsAppLink } from '@/data/fleet';
 import { Button } from '@/components/ui/button';
+import { useAnalytics } from '@/contexts/AnalyticsContext';
 
 interface CarDrawerProps {
   car: Car | null;
@@ -9,6 +10,8 @@ interface CarDrawerProps {
 }
 
 export function CarDrawer({ car, onClose }: CarDrawerProps) {
+  const { trackInquiry } = useAnalytics();
+
   if (!car) return null;
 
   return (
@@ -48,7 +51,7 @@ export function CarDrawer({ car, onClose }: CarDrawerProps) {
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
-              
+
               {/* Price Overlay */}
               <div className="absolute bottom-4 left-4">
                 <p className="text-sm text-primary font-display tracking-wider mb-1">
@@ -105,19 +108,19 @@ export function CarDrawer({ car, onClose }: CarDrawerProps) {
                 <div className="grid grid-cols-2 gap-y-3 text-sm">
                   <div className="text-muted-foreground">Engine</div>
                   <div className="text-foreground text-right">{car.engine}</div>
-                  
+
                   <div className="text-muted-foreground">Transmission</div>
                   <div className="text-foreground text-right">{car.transmission}</div>
-                  
+
                   <div className="text-muted-foreground">Drivetrain</div>
                   <div className="text-foreground text-right">{car.specs.drivetrain}</div>
-                  
+
                   <div className="text-muted-foreground">Exterior Color</div>
                   <div className="text-foreground text-right">{car.color}</div>
-                  
+
                   <div className="text-muted-foreground">Interior</div>
                   <div className="text-foreground text-right">{car.interiorColor}</div>
-                  
+
                   <div className="text-muted-foreground">Mileage</div>
                   <div className="text-foreground text-right">
                     {car.mileage === 0 ? 'Brand New' : `${car.mileage.toLocaleString()} km`}
@@ -131,6 +134,7 @@ export function CarDrawer({ car, onClose }: CarDrawerProps) {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block"
+                onClick={() => trackInquiry(car.id)}
               >
                 <Button className="w-full btn-gold h-14 font-display tracking-wider text-lg">
                   <Phone className="w-5 h-5 mr-2" />

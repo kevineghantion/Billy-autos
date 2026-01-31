@@ -3,6 +3,7 @@ import { Eye, Heart } from 'lucide-react';
 import { Car, formatPrice, generateWhatsAppLink } from '@/data/fleet';
 import { Button } from '@/components/ui/button';
 import { useFavorites } from '@/contexts/FavoritesContext';
+import { useAnalytics } from '@/contexts/AnalyticsContext';
 import { useToast } from '@/hooks/use-toast';
 
 interface CarCardProps {
@@ -13,6 +14,7 @@ interface CarCardProps {
 
 export function CarCard({ car, index, onQuickView }: CarCardProps) {
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { trackView, trackInquiry } = useAnalytics();
   const { toast } = useToast();
   const isSold = car.status === 'sold';
   const isPOA = car.price === 0;
@@ -90,7 +92,10 @@ export function CarCard({ car, index, onQuickView }: CarCardProps) {
         {!isSold && (
           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
             <Button
-              onClick={() => onQuickView(car)}
+              onClick={() => {
+                trackView(car.id);
+                onQuickView(car);
+              }}
               variant="outline"
               className="btn-glass font-display tracking-wider"
             >
@@ -135,6 +140,7 @@ export function CarCard({ car, index, onQuickView }: CarCardProps) {
           <Button
             className={`w-full font-display tracking-wider ${isSold ? 'btn-glass opacity-50' : 'btn-gold'}`}
             disabled={isSold}
+            onClick={() => trackInquiry(car.id)}
           >
             {isSold ? 'SOLD' : 'REQUEST PRICE'}
           </Button>
